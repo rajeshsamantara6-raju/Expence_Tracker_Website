@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ExpenseFlow - Smart Expense Tracker</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        @keyframes slideInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes bounce {
+            0%, 20%, 53%, 80%, 100% { transform: translateY(0); }
+            40%, 43% { transform: translateY(-10px); }
+            70% { transform: translateY(-5px); }
+        }
+        
+        .animate-slideInUp {
+            animation: slideInUp 0.6s ease-out;
+        }
+        
+        .animate-fadeIn {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .animate-pulse-custom {
+            animation: pulse 2s infinite;
+        }
+        
+        .animate-bounce-custom {
+            animation: bounce 1s;
+        }
+        
+        .glass-effect {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .expense-item {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .expense-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
+        }
+        
+        .btn-hover {
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn-hover::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn-hover:hover::before {
+            left: 100%;
+        }
+        
+        .category-icon {
+            transition: all 0.3s ease;
+        }
+        
+        .category-icon:hover {
+            transform: rotate(10deg) scale(1.1);
+        }
+    </style>
+</head>
+<body class="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-indigo-900">
+    <!-- Header -->
+    <header class="glass-effect p-6 animate-fadeIn">
+        <div class="max-w-6xl mx-auto flex justify-between items-center">
+            <div class="flex items-center space-x-3">
+                <div class="w-10 h-10 bg-gradient-to-r from-purple-400 to-pink-400 rounded-xl flex items-center justify-center animate-pulse-custom">
+                    <span class="text-white font-bold text-xl">💰</span>
+                </div>
+                <h1 class="text-2xl font-bold text-white">ExpenseFlow</h1>
+            </div>
+            <div class="text-white text-right">
+                <p class="text-sm opacity-80">Total Balance</p>
+                <p class="text-2xl font-bold" id="totalBalance">$2,450.00</p>
+                <div class="flex flex-wrap gap-2 mt-2">
+                    <button id="addMoneyBtn" class="bg-green-500 hover:bg-green-600 px-3 py-1 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105">
+                        + Add Money
+                    </button>
+                    <button id="monthlyExpenseBtn" class="bg-blue-500 hover:bg-blue-600 px-3 py-1 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105">
+                        📅 Monthly
+                    </button>
+                    <button id="yearlyExpenseBtn" class="bg-purple-500 hover:bg-purple-600 px-3 py-1 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105">
+                        📆 Yearly
+                    </button>
+                    <button id="resetMoneyBtn" class="bg-red-500 hover:bg-red-600 px-3 py-1 rounded-lg text-sm font-medium transition-all duration-300 hover:scale-105">
+                        🔄 Reset
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="max-w-6xl mx-auto p-6 grid lg:grid-cols-3 gap-8">
+        <!-- Add Expense Form -->
+        <div class="lg:col-span-1">
+            <div class="glass-effect rounded-2xl p-6 animate-slideInUp">
+                <h2 class="text-xl font-semibold text-white mb-6 flex items-center">
+                    <span class="mr-2">➕</span> Add Expense
+                </h2>
+                
+                <form id="expenseForm" class="space-y-4">
+                    <div>
+                        <input type="text" id="description" placeholder="Description" required
+                               class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300">
+                    </div>
+                    
+                    <div>
+                        <input type="number" id="amount" placeholder="Amount" step="0.01" required
+                               class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300">
+                    </div>
+                    
+                    <div>
+                        <select id="category" required
+                                class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300">
+                            <option value="">Select Category</option>
+                            <option value="food">🍔 Food</option>
+                            <option value="transport">🚗 Transport</option>
+                            <option value="entertainment">🎬 Entertainment</option>
+                            <option value="shopping">🛍️ Shopping</option>
+                            <option value="bills">💡 Bills</option>
+                            <option value="health">🏥 Health</option>
+                            <option value="other">📦 Other</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <input type="date" id="date" required
+                               class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300">
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-xl font-semibold btn-hover hover:from-purple-600 hover:to-pink-600 transform hover:scale-105 transition-all duration-300">
+                        Add Expense
+                    </button>
+                </form>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="glass-effect rounded-2xl p-6 mt-6 animate-slideInUp" style="animation-delay: 0.2s;">
+                <h3 class="text-lg font-semibold text-white mb-4">📊 Quick Stats</h3>
+                <div class="space-y-3">
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/80">This Month</span>
+                        <span class="text-red-400 font-semibold" id="monthlyTotal">$0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/80">Today</span>
+                        <span class="text-red-400 font-semibold" id="todayTotal">$0.00</span>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-white/80">Transactions</span>
+                        <span class="text-blue-400 font-semibold" id="transactionCount">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Expenses List -->
+        <div class="lg:col-span-2">
+            <div class="glass-effect rounded-2xl p-6 animate-slideInUp" style="animation-delay: 0.1s;">
+                <div class="flex justify-between items-center mb-6">
+                    <h2 class="text-xl font-semibold text-white flex items-center">
+                        <span class="mr-2">📋</span> Recent Expenses
+                    </h2>
+                    <button id="clearAll" class="text-red-400 hover:text-red-300 transition-colors duration-300 font-medium">
+                        Clear All
+                    </button>
+                </div>
+                
+                <div id="expensesList" class="space-y-3 max-h-96 overflow-y-auto">
+                    <!-- Sample expenses will be added here -->
+                </div>
+                
+                <div id="emptyState" class="text-center py-12 text-white/60">
+                    <div class="text-6xl mb-4 animate-bounce-custom">💸</div>
+                    <p class="text-lg">No expenses yet</p>
+                    <p class="text-sm">Add your first expense to get started!</p>
+                </div>
+            </div>
+
+            <!-- Category Breakdown -->
+            <div class="glass-effect rounded-2xl p-6 mt-6 animate-slideInUp" style="animation-delay: 0.3s;">
+                <h3 class="text-lg font-semibold text-white mb-4 flex items-center">
+                    <span class="mr-2">🎯</span> Category Breakdown
+                </h3>
+                <div id="categoryBreakdown" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Category items will be populated here -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Balance Management Modal -->
+    <div id="balanceModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-2xl p-6 w-full max-w-md mx-4 animate-slideInUp">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-white" id="modalTitle">Add Money</h3>
+                <button id="closeModal" class="text-white/60 hover:text-white transition-colors duration-300 text-2xl">×</button>
+            </div>
+            
+            <form id="balanceForm" class="space-y-4">
+                <div id="amountField">
+                    <input type="number" id="balanceAmount" placeholder="Enter amount" step="0.01" required
+                           class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300">
+                </div>
+                
+                <div id="descriptionField">
+                    <input type="text" id="balanceDescription" placeholder="Description (optional)"
+                           class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300">
+                </div>
+                
+                <div id="resetConfirmation" class="hidden">
+                    <p class="text-white/80 text-center mb-4">Are you sure you want to reset your balance to $0.00?</p>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="button" id="cancelBalance" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-xl font-semibold transition-all duration-300">
+                        Cancel
+                    </button>
+                    <button type="submit" id="confirmBalance" class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-xl font-semibold btn-hover hover:from-purple-600 hover:to-pink-600 transition-all duration-300">
+                        Confirm
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Monthly Budget Modal -->
+    <div id="monthlyBudgetModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-2xl p-6 w-full max-w-md mx-4 animate-slideInUp">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-white">📅 Monthly Budget</h3>
+                <button id="closeMonthlyModal" class="text-white/60 hover:text-white transition-colors duration-300 text-2xl">×</button>
+            </div>
+            
+            <div class="text-center mb-6">
+                <div class="text-3xl mb-2">📅</div>
+                <h4 class="text-lg font-semibold text-white" id="currentMonthName">December 2024</h4>
+                <p class="text-white/60 text-sm">Set your budget for this month</p>
+            </div>
+            
+            <form id="monthlyBudgetForm" class="space-y-4">
+                <div>
+                    <input type="number" id="monthlyAmount" placeholder="Enter amount for this month" step="0.01" required
+                           class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-blue-400 transition-all duration-300">
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="button" id="cancelMonthly" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-xl font-semibold transition-all duration-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-blue-500 to-indigo-500 text-white p-3 rounded-xl font-semibold btn-hover hover:from-blue-600 hover:to-indigo-600 transition-all duration-300">
+                        Add to Balance
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Yearly View Modal -->
+    <div id="yearlyViewModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-2xl p-6 w-full max-w-md mx-4 animate-slideInUp">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-white">📆 Yearly View</h3>
+                <button id="closeYearlyModal" class="text-white/60 hover:text-white transition-colors duration-300 text-2xl">×</button>
+            </div>
+            
+            <div class="text-center mb-6">
+                <div class="text-3xl mb-2">📆</div>
+                <h4 class="text-lg font-semibold text-white">Select Year</h4>
+                <p class="text-white/60 text-sm">Choose a year to view</p>
+            </div>
+            
+            <form id="yearlyViewForm" class="space-y-4">
+                <div>
+                    <select id="yearSelect" required
+                            class="w-full p-3 rounded-xl bg-white/10 border border-white/20 text-white focus:outline-none focus:ring-2 focus:ring-purple-400 transition-all duration-300">
+                        <!-- Years will be populated here -->
+                    </select>
+                </div>
+                
+                <div class="flex space-x-3">
+                    <button type="button" id="cancelYearly" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-xl font-semibold transition-all duration-300">
+                        Cancel
+                    </button>
+                    <button type="submit" class="flex-1 bg-gradient-to-r from-purple-500 to-pink-500 text-white p-3 rounded-xl font-semibold btn-hover hover:from-purple-600 hover:to-pink-600 transition-all duration-300">
+                        View Year
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Reset Confirmation Modal -->
+    <div id="resetConfirmationModal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50">
+        <div class="glass-effect rounded-2xl p-6 w-full max-w-md mx-4 animate-slideInUp">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="text-xl font-semibold text-white">🔄 Reset Balance</h3>
+                <button id="closeResetModal" class="text-white/60 hover:text-white transition-colors duration-300 text-2xl">×</button>
+            </div>
+            
+            <div class="text-center mb-6">
+                <div class="text-4xl mb-4">⚠️</div>
+                <h4 class="text-lg font-semibold text-white mb-2">Warning!</h4>
+                <p class="text-white/80">Are you sure you want to reset your balance to $0.00?</p>
+                <p class="text-red-400 text-sm mt-2">This action cannot be undone.</p>
+            </div>
+            
+            <div class="flex space-x-3">
+                <button id="cancelReset" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-xl font-semibold transition-all duration-300">
+                    Cancel
+                </button>
+                <button id="confirmReset" class="flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white p-3 rounded-xl font-semibold btn-hover hover:from-red-600 hover:to-pink-600 transition-all duration-300">
+                    Reset Balance
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        class ExpenseTracker {
+            constructor() {
+                this.expenses = JSON.parse(localStorage.getItem('expenses')) || [];
+                this.totalBalance = parseFloat(localStorage.getItem('totalBalance')) || 2450.00;
+                this.balanceHistory = JSON.parse(localStorage.getItem('balanceHistory')) || [];
+                this.currentBalanceAction = null;
+                this.init();
+            }
+
+            init() {
+                this.setupEventListeners();
+                this.setTodayDate();
+                this.renderExpenses();
+                this.updateStats();
+                this.updateCategoryBreakdown();
+                this.updateBalance();
+            }
+
+            setupEventListeners() {
+                document.getElementById('expenseForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.addExpense();
+                });
+
+                document.getElementById('clearAll').addEventListener('click', () => {
+                    this.clearAllExpenses();
+                });
+
+                // Balance management listeners
+                document.getElementById('addMoneyBtn').addEventListener('click', () => {
+                    this.openBalanceModal('add');
+                });
+
+                document.getElementById('monthlyExpenseBtn').addEventListener('click', () => {
+                    this.openMonthlyBudgetModal();
+                });
+
+                document.getElementById('yearlyExpenseBtn').addEventListener('click', () => {
+                    this.openYearlyViewModal();
+                });
+
+                document.getElementById('resetMoneyBtn').addEventListener('click', () => {
+                    this.openResetConfirmationModal();
+                });
+
+                document.getElementById('closeModal').addEventListener('click', () => {
+                    this.closeBalanceModal();
+                });
+
+                document.getElementById('cancelBalance').addEventListener('click', () => {
+                    this.closeBalanceModal();
+                });
+
+                document.getElementById('balanceForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleBalanceTransaction();
+                });
+
+                // Monthly Budget modal listeners
+                document.getElementById('closeMonthlyModal').addEventListener('click', () => {
+                    this.closeMonthlyBudgetModal();
+                });
+
+                document.getElementById('cancelMonthly').addEventListener('click', () => {
+                    this.closeMonthlyBudgetModal();
+                });
+
+                document.getElementById('monthlyBudgetForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleMonthlyBudget();
+                });
+
+                // Yearly View modal listeners
+                document.getElementById('closeYearlyModal').addEventListener('click', () => {
+                    this.closeYearlyViewModal();
+                });
+
+                document.getElementById('cancelYearly').addEventListener('click', () => {
+                    this.closeYearlyViewModal();
+                });
+
+                document.getElementById('yearlyViewForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.handleYearlyView();
+                });
+
+                // Reset Confirmation modal listeners
+                document.getElementById('closeResetModal').addEventListener('click', () => {
+                    this.closeResetConfirmationModal();
+                });
+
+                document.getElementById('cancelReset').addEventListener('click', () => {
+                    this.closeResetConfirmationModal();
+                });
+
+                document.getElementById('confirmReset').addEventListener('click', () => {
+                    this.handleResetBalance();
+                });
+
+                // Close modals when clicking outside
+                document.getElementById('balanceModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'balanceModal') {
+                        this.closeBalanceModal();
+                    }
+                });
+
+                document.getElementById('monthlyBudgetModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'monthlyBudgetModal') {
+                        this.closeMonthlyBudgetModal();
+                    }
+                });
+
+                document.getElementById('yearlyViewModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'yearlyViewModal') {
+                        this.closeYearlyViewModal();
+                    }
+                });
+
+                document.getElementById('resetConfirmationModal').addEventListener('click', (e) => {
+                    if (e.target.id === 'resetConfirmationModal') {
+                        this.closeResetConfirmationModal();
+                    }
+                });
+            }
+
+            setTodayDate() {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('date').value = today;
+            }
+
+            addExpense() {
+                const description = document.getElementById('description').value;
+                const amount = parseFloat(document.getElementById('amount').value);
+                const category = document.getElementById('category').value;
+                const date = document.getElementById('date').value;
+
+                const expense = {
+                    id: Date.now(),
+                    description,
+                    amount,
+                    category,
+                    date,
+                    timestamp: new Date().toISOString()
+                };
+
+                this.expenses.unshift(expense);
+                this.totalBalance -= amount;
+                this.saveData();
+                this.renderExpenses();
+                this.updateStats();
+                this.updateCategoryBreakdown();
+                this.updateBalance();
+                this.resetForm();
+
+                // Add success animation
+                this.showSuccessAnimation();
+            }
+
+            showSuccessAnimation() {
+                const form = document.getElementById('expenseForm');
+                form.style.transform = 'scale(0.98)';
+                setTimeout(() => {
+                    form.style.transform = 'scale(1)';
+                }, 150);
+            }
+
+            resetForm() {
+                document.getElementById('expenseForm').reset();
+                this.setTodayDate();
+            }
+
+            renderExpenses() {
+                const container = document.getElementById('expensesList');
+                const emptyState = document.getElementById('emptyState');
+
+                if (this.expenses.length === 0) {
+                    container.innerHTML = '';
+                    emptyState.style.display = 'block';
+                    return;
+                }
+
+                emptyState.style.display = 'none';
+                container.innerHTML = this.expenses.map(expense => this.createExpenseHTML(expense)).join('');
+            }
+
+            createExpenseHTML(expense) {
+                const categoryIcons = {
+                    food: '🍔',
+                    transport: '🚗',
+                    entertainment: '🎬',
+                    shopping: '🛍️',
+                    bills: '💡',
+                    health: '🏥',
+                    other: '📦'
+                };
+
+                const date = new Date(expense.date).toLocaleDateString();
+                
+                return `
+                    <div class="expense-item glass-effect rounded-xl p-4 cursor-pointer group">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center space-x-3">
+                                <div class="category-icon text-2xl">${categoryIcons[expense.category] || '📦'}</div>
+                                <div>
+                                    <h4 class="text-white font-medium group-hover:text-purple-300 transition-colors duration-300">${expense.description}</h4>
+                                    <p class="text-white/60 text-sm">${date}</p>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <p class="text-red-400 font-semibold text-lg">-$${expense.amount.toFixed(2)}</p>
+                                <button onclick="expenseTracker.deleteExpense(${expense.id})" 
+                                        class="text-white/40 hover:text-red-400 transition-colors duration-300 text-sm mt-1">
+                                    Delete
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            deleteExpense(id) {
+                const expense = this.expenses.find(exp => exp.id === id);
+                if (expense) {
+                    this.totalBalance += expense.amount;
+                    this.expenses = this.expenses.filter(exp => exp.id !== id);
+                    this.saveData();
+                    this.renderExpenses();
+                    this.updateStats();
+                    this.updateCategoryBreakdown();
+                    this.updateBalance();
+                }
+            }
+
+            clearAllExpenses() {
+                if (this.expenses.length === 0) return;
+                
+                if (confirm('Are you sure you want to clear all expenses?')) {
+                    // Return all expense amounts to balance
+                    const totalExpenses = this.expenses.reduce((sum, exp) => sum + exp.amount, 0);
+                    this.totalBalance += totalExpenses;
+                    
+                    this.expenses = [];
+                    this.saveData();
+                    this.renderExpenses();
+                    this.updateStats();
+                    this.updateCategoryBreakdown();
+                    this.updateBalance();
+                }
+            }
+
+            updateStats() {
+                const today = new Date().toISOString().split('T')[0];
+                const currentMonth = new Date().getMonth();
+                const currentYear = new Date().getFullYear();
+
+                const todayExpenses = this.expenses.filter(exp => exp.date === today);
+                const monthlyExpenses = this.expenses.filter(exp => {
+                    const expDate = new Date(exp.date);
+                    return expDate.getMonth() === currentMonth && expDate.getFullYear() === currentYear;
+                });
+
+                const todayTotal = todayExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+                const monthlyTotal = monthlyExpenses.reduce((sum, exp) => sum + exp.amount, 0);
+
+                document.getElementById('todayTotal').textContent = `$${todayTotal.toFixed(2)}`;
+                document.getElementById('monthlyTotal').textContent = `$${monthlyTotal.toFixed(2)}`;
+                document.getElementById('transactionCount').textContent = this.expenses.length;
+            }
+
+            updateCategoryBreakdown() {
+                const container = document.getElementById('categoryBreakdown');
+                const categoryTotals = {};
+
+                this.expenses.forEach(expense => {
+                    categoryTotals[expense.category] = (categoryTotals[expense.category] || 0) + expense.amount;
+                });
+
+                const categoryIcons = {
+                    food: '🍔',
+                    transport: '🚗',
+                    entertainment: '🎬',
+                    shopping: '🛍️',
+                    bills: '💡',
+                    health: '🏥',
+                    other: '📦'
+                };
+
+                const categoryNames = {
+                    food: 'Food',
+                    transport: 'Transport',
+                    entertainment: 'Entertainment',
+                    shopping: 'Shopping',
+                    bills: 'Bills',
+                    health: 'Health',
+                    other: 'Other'
+                };
+
+                container.innerHTML = Object.entries(categoryTotals)
+                    .sort(([,a], [,b]) => b - a)
+                    .map(([category, total]) => `
+                        <div class="glass-effect rounded-xl p-3 text-center hover:scale-105 transition-transform duration-300">
+                            <div class="category-icon text-2xl mb-2">${categoryIcons[category]}</div>
+                            <p class="text-white/80 text-sm">${categoryNames[category]}</p>
+                            <p class="text-red-400 font-semibold">$${total.toFixed(2)}</p>
+                        </div>
+                    `).join('');
+            }
+
+            updateBalance() {
+                document.getElementById('totalBalance').textContent = `$${this.totalBalance.toFixed(2)}`;
+            }
+
+            openBalanceModal(action) {
+                this.currentBalanceAction = action;
+                const modal = document.getElementById('balanceModal');
+                const modalTitle = document.getElementById('modalTitle');
+                const confirmBtn = document.getElementById('confirmBalance');
+                const amountField = document.getElementById('amountField');
+                const descriptionField = document.getElementById('descriptionField');
+                const resetConfirmation = document.getElementById('resetConfirmation');
+                
+                // Reset visibility
+                amountField.style.display = 'block';
+                descriptionField.style.display = 'block';
+                resetConfirmation.classList.add('hidden');
+                
+                if (action === 'add') {
+                    modalTitle.textContent = '💰 Add Money';
+                    confirmBtn.textContent = 'Add Money';
+                    confirmBtn.className = 'flex-1 bg-gradient-to-r from-green-500 to-emerald-500 text-white p-3 rounded-xl font-semibold btn-hover hover:from-green-600 hover:to-emerald-600 transition-all duration-300';
+                } else if (action === 'reset') {
+                    modalTitle.textContent = '🔄 Reset Balance';
+                    confirmBtn.textContent = 'Reset Balance';
+                    confirmBtn.className = 'flex-1 bg-gradient-to-r from-red-500 to-pink-500 text-white p-3 rounded-xl font-semibold btn-hover hover:from-red-600 hover:to-pink-600 transition-all duration-300';
+                    amountField.style.display = 'none';
+                    descriptionField.style.display = 'none';
+                    resetConfirmation.classList.remove('hidden');
+                }
+                
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                if (action !== 'reset') {
+                    document.getElementById('balanceAmount').focus();
+                }
+            }
+
+            closeBalanceModal() {
+                const modal = document.getElementById('balanceModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('balanceForm').reset();
+                this.currentBalanceAction = null;
+            }
+
+            handleBalanceTransaction() {
+                if (this.currentBalanceAction === 'reset') {
+                    this.totalBalance = 0;
+                    const transaction = {
+                        id: Date.now(),
+                        type: 'reset',
+                        amount: 0,
+                        description: 'Balance Reset',
+                        date: new Date().toISOString().split('T')[0],
+                        timestamp: new Date().toISOString()
+                    };
+                    this.balanceHistory.unshift(transaction);
+                } else {
+                    const amount = parseFloat(document.getElementById('balanceAmount').value);
+                    const description = document.getElementById('balanceDescription').value || 'Money Added';
+
+                    const transaction = {
+                        id: Date.now(),
+                        type: this.currentBalanceAction,
+                        amount: amount,
+                        description: description,
+                        date: new Date().toISOString().split('T')[0],
+                        timestamp: new Date().toISOString()
+                    };
+
+                    if (this.currentBalanceAction === 'add') {
+                        this.totalBalance += amount;
+                    }
+
+                    this.balanceHistory.unshift(transaction);
+                }
+
+                this.saveData();
+                this.updateBalance();
+                this.updateStats();
+                this.closeBalanceModal();
+                this.showBalanceSuccessAnimation();
+            }
+
+            showBalanceSuccessAnimation(action = null) {
+                const balanceElement = document.getElementById('totalBalance');
+                balanceElement.style.transform = 'scale(1.1)';
+                
+                if (action === 'add') {
+                    balanceElement.style.color = '#10b981'; // Green for add
+                } else if (action === 'reset') {
+                    balanceElement.style.color = '#ef4444'; // Red for reset
+                } else {
+                    balanceElement.style.color = this.currentBalanceAction === 'add' ? '#10b981' : '#ef4444';
+                }
+                
+                setTimeout(() => {
+                    balanceElement.style.transform = 'scale(1)';
+                    balanceElement.style.color = 'white';
+                }, 500);
+            }
+
+            openMonthlyBudgetModal() {
+                const modal = document.getElementById('monthlyBudgetModal');
+                const currentMonthName = document.getElementById('currentMonthName');
+                
+                const now = new Date();
+                const monthNames = ["January", "February", "March", "April", "May", "June",
+                    "July", "August", "September", "October", "November", "December"];
+                
+                currentMonthName.textContent = `${monthNames[now.getMonth()]} ${now.getFullYear()}`;
+                
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                document.getElementById('monthlyAmount').focus();
+            }
+
+            closeMonthlyBudgetModal() {
+                const modal = document.getElementById('monthlyBudgetModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('monthlyBudgetForm').reset();
+            }
+
+            handleMonthlyBudget() {
+                const amount = parseFloat(document.getElementById('monthlyAmount').value);
+                
+                if (amount > 0) {
+                    this.totalBalance += amount;
+                    this.saveData();
+                    this.updateBalance();
+                    this.updateStats();
+                    this.closeMonthlyBudgetModal();
+                    this.showBalanceSuccessAnimation('add');
+                }
+            }
+
+            openYearlyViewModal() {
+                const modal = document.getElementById('yearlyViewModal');
+                const yearSelect = document.getElementById('yearSelect');
+                
+                // Populate years (current year and previous 5 years)
+                const currentYear = new Date().getFullYear();
+                yearSelect.innerHTML = '';
+                
+                for (let year = currentYear; year >= currentYear - 5; year--) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    if (year === currentYear) {
+                        option.selected = true;
+                    }
+                    yearSelect.appendChild(option);
+                }
+                
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            closeYearlyViewModal() {
+                const modal = document.getElementById('yearlyViewModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+                document.getElementById('yearlyViewForm').reset();
+            }
+
+            handleYearlyView() {
+                const selectedYear = parseInt(document.getElementById('yearSelect').value);
+                
+                // Just show an alert with the selected year for now
+                alert(`📆 Viewing Year: ${selectedYear}\n\nThis feature shows you selected ${selectedYear} for yearly view.`);
+                
+                this.closeYearlyViewModal();
+            }
+
+            openResetConfirmationModal() {
+                const modal = document.getElementById('resetConfirmationModal');
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+
+            closeResetConfirmationModal() {
+                const modal = document.getElementById('resetConfirmationModal');
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            handleResetBalance() {
+                this.totalBalance = 0;
+                this.saveData();
+                this.updateBalance();
+                this.updateStats();
+                this.closeResetConfirmationModal();
+                this.showBalanceSuccessAnimation('reset');
+            }
+
+
+
+            saveData() {
+                localStorage.setItem('expenses', JSON.stringify(this.expenses));
+                localStorage.setItem('totalBalance', this.totalBalance.toString());
+                localStorage.setItem('balanceHistory', JSON.stringify(this.balanceHistory));
+            }
+        }
+
+        // Initialize the expense tracker
+        const expenseTracker = new ExpenseTracker();
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9732181235ad28cd',t:'MTc1NTg2MjgxMy4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
